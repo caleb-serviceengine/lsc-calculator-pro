@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,7 +74,7 @@ const Auth = () => {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: 'https://lsc-calculator-pro.lovable.app',
+          emailRedirectTo: 'https://app.lakestatecleaning.com',
           data: { full_name: fullName.trim() },
         },
       });
@@ -99,7 +98,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'https://lsc-calculator-pro.lovable.app/reset-password',
+        redirectTo: 'https://app.lakestatecleaning.com/reset-password',
       });
       if (error) toast.error(error.message);
       else {
@@ -123,8 +122,9 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
       });
       if (error) toast.error(error.message || "Google sign-in failed");
     } catch {
