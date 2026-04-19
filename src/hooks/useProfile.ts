@@ -22,7 +22,7 @@ export function useProfile() {
     const { data, error } = await supabase
       .from("profiles")
       .select("full_name, created_at")
-      .eq("user_id", session.user.id)
+      .eq("id", session.user.id)
       .maybeSingle();
 
     console.log('[useProfile] data:', data, 'error:', error);
@@ -32,7 +32,7 @@ export function useProfile() {
       console.log('[useProfile] No profile found, creating one...');
       const { data: inserted, error: insertErr } = await supabase
         .from("profiles")
-        .insert({ user_id: session.user.id, full_name: "" } as any)
+        .insert({ id: session.user.id, full_name: "" } as any)
         .select("full_name, created_at")
         .single();
 
@@ -58,7 +58,7 @@ export function useProfile() {
     const { error } = await supabase
       .from("profiles")
       .update({ full_name: fullName })
-      .eq("user_id", session.user.id);
+      .eq("id", session.user.id);
 
     if (!error) {
       setProfile((prev) => prev ? { ...prev, fullName } : prev);
