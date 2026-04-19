@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cd widget && vite build && mkdir -p ../dist/widget && cp -r dist/* ../dist/widget",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
