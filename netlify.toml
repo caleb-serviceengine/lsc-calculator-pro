@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm install && npm install --prefix widget && npm run build"
   publish = "dist"
 
 # Widget iframe: allow embedding from any origin
