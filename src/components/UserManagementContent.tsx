@@ -22,7 +22,6 @@ import { Loader2 } from "lucide-react";
 
 interface UserProfile {
   id: string;
-  user_id: string;
   full_name: string | null;
   role: string;
   is_active: boolean;
@@ -41,29 +40,13 @@ const UserManagementContent = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const [profilesRes, emailsRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, user_id, full_name, role, is_active, created_at")
-          .order("created_at", { ascending: false }),
-        supabase.rpc("get_user_emails"),
-      ]);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, role, is_active, created_at, email")
+        .order("created_at", { ascending: false });
 
-      if (profilesRes.error) throw profilesRes.error;
-
-      const emailMap = new Map<string, string>();
-      if (emailsRes.data) {
-        (emailsRes.data as { user_id: string; email: string }[]).forEach((e) =>
-          emailMap.set(e.user_id, e.email)
-        );
-      }
-
-      const merged = (profilesRes.data || []).map((p: any) => ({
-        ...p,
-        email: emailMap.get(p.user_id) || undefined,
-      }));
-
-      setUsers(merged as UserProfile[]);
+      if (error) throw error;
+      setUsers((data || []) as UserProfile[]);
     } catch (error: any) {
       console.error("Error loading users:", error);
       toast.error("Failed to load users");
