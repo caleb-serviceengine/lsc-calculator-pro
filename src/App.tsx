@@ -23,8 +23,6 @@ const App = () => {
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // Only clear session on explicit sign-out to avoid unmounting
-        // the calculator (and losing all data) during token refreshes
         if (event === "SIGNED_OUT") {
           setSession(null);
         } else if (session) {
@@ -34,13 +32,18 @@ const App = () => {
       }
     );
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    // Only use getSession as fallback if onAuthStateChange hasn't fired yet
+    const timer = setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(prev => prev ?? session);
+        setLoading(false);
+      });
+    }, 500);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   if (loading) {
