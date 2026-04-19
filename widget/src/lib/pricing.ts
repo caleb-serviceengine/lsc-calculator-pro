@@ -1,6 +1,8 @@
 // Minimal typing for the settings shape the widget needs.
 // Must stay in sync with PricingSettings in the main app.
 
+import type { WidgetPricingTier } from "@/lib/widgetPricingTypes";
+
 export interface StoryModifier {
   type: "dollar" | "percent";
   value: number;
@@ -69,6 +71,30 @@ export function estimateGutterCleaning(homeSqft: number, s: PricingSettings): nu
   return Math.max(Math.round(withSeasonal(price, s) * 100) / 100, s.gutterMinPrice);
 }
 
+// ── Gutter Cleaning Price Range (Silver = gold tier, Gold = platinum tier) ──────
+export function estimateGutterCleaningRange(
+  homeSqft: number,
+  s: PricingSettings
+): { low: number; high: number } {
+  const tier = s.gutterTiers.find(
+    (t) => homeSqft >= t.minSqft && homeSqft <= t.maxSqft
+  ) ?? s.gutterTiers[s.gutterTiers.length - 1];
+
+  if (!tier) return { low: 0, high: 0 };
+
+  const silver = Math.max(
+    Math.round(withSeasonal(tier.gold, s) * 100) / 100,
+    s.gutterMinPrice
+  );
+
+  const gold = Math.max(
+    Math.round(withSeasonal(tier.platinum, s) * 100) / 100,
+    s.gutterMinPrice
+  );
+
+  return { low: silver, high: gold };
+}
+
 // ── Gutter Protection (FlowGuard by default, linear ft estimated from home sqft) ─
 export function estimateGutterProtection(
   linearFt: number,
@@ -129,4 +155,20 @@ export function priceRange(
     low:  Math.round(mid * (1 - spread)),
     high: Math.round(mid * (1 + spread)),
   };
+}
+
+// ── Widget Pricing Tier Lookup ──────────────────────────────────────────────
+// Look up pricing from tier table by service and home square footage
+export function getWidgetPriceRange(
+  homeSqft: number,
+  serviceId: string,
+  tiers: WidgetPricingTier[]
+): { low: number; high: number } | null {
+  const tier = tiers.find(
+    (t) => t.service_id === serviceId && homeSqft >= t.min_sqft && homeSqft <= t.max_sqft
+  );
+
+  return tier
+    ? { low: Math.round(tier.low_price * 100) / 100, high: Math.round(tier.high_price * 100) / 100 }
+    : null;
 }

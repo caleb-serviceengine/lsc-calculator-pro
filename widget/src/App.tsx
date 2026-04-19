@@ -1,16 +1,19 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { fetchPricingSettings } from "./lib/supabase";
+import { fetchPricingSettings, fetchWidgetPricingSettings } from "./lib/supabase";
 import {
   estimateHouseWash,
   estimateGutterCleaning,
+  estimateGutterCleaningRange,
   estimateGutterProtection,
   estimateWindowCleaning,
   estimateRoofCleaning,
   estimateDriveway,
   estimateDeckCleaning,
   priceRange,
+  getWidgetPriceRange,
   type PricingSettings,
 } from "./lib/pricing";
+import type { WidgetPricingTier } from "@/lib/widgetPricingTypes";
 import {
   HOME_SIZE_OPTIONS,
   GUTTER_LIN_FT_PER_SQFT,
@@ -48,25 +51,25 @@ const SERVICES: {
   {
     id: "house-washing",
     label: "House Washing",
-    shortLabel: "House Wash",
+    shortLabel: "House Washing",
     icon: `${BASE}01-4-1.png`,
   },
   {
     id: "gutter-cleaning",
     label: "Gutter Cleaning",
-    shortLabel: "Gutters",
+    shortLabel: "Gutter Cleaning",
     icon: `${BASE}01-3-1-1.png`,
   },
   {
     id: "roof-cleaning",
     label: "Roof Cleaning",
-    shortLabel: "Roof",
+    shortLabel: "Roof Cleaning",
     icon: `${BASE}01-7-1-1.png`,
   },
   {
     id: "gutter-protection",
     label: "Gutter Protection",
-    shortLabel: "Gutter Guard",
+    shortLabel: "Gutter Protection",
     // Using the cleaning cart icon — update when a dedicated gutter guard
     // icon is available from the brand kit.
     icon: `${BASE}01-6-1.png`,
@@ -74,19 +77,19 @@ const SERVICES: {
   {
     id: "window-cleaning",
     label: "Window Cleaning",
-    shortLabel: "Windows",
+    shortLabel: "Window Cleaning",
     icon: `${BASE}01-5-1.png`,
   },
   {
     id: "driveway",
     label: "Driveway Washing",
-    shortLabel: "Driveway",
+    shortLabel: "Driveway Washing",
     icon: `${BASE}01-2-1-1.png`,
   },
   {
     id: "deck-cleaning",
     label: "Deck Cleaning",
-    shortLabel: "Deck",
+    shortLabel: "Deck Cleaning",
     icon: `${BASE}01-9-1-1.png`,
   },
 ];
@@ -154,7 +157,7 @@ function ServiceTab({
       {/* Bold italic label — matches homepage card typography */}
       <span
         className={[
-          "text-[10px] font-bold italic leading-tight text-center",
+          "text-[11px] font-bold italic leading-tight text-center line-clamp-2",
           active ? "text-white" : "text-white/70",
         ].join(" ")}
       >
@@ -321,6 +324,7 @@ function PriceDisplay({
 
 export default function App() {
   const [settings, setSettings] = useState<PricingSettings | null>(null);
+  const [widgetPricingTiers, setWidgetPricingTiers] = useState<WidgetPricingTier[]>([]);
   const [activeService, setActiveService] = useState<ServiceId>("house-washing");
   const [homeSqft, setHomeSqft] = useState<number>(HOME_SIZE_OPTIONS[2].sqft);
   const [drivewaySz, setDrivewaySz] = useState<DrivewaySizeKey>("two");
@@ -353,50 +357,65 @@ export default function App() {
   // Load from Supabase, fall back to hardcoded defaults
   useEffect(() => {
     fetchPricingSettings().then(setSettings);
+    fetchWidgetPricingSettings().then(setWidgetPricingTiers);
   }, []);
 
-  // ── Calculate mid-price ────────────────────────────────────────────────────
-  const mid = useMemo(() => {
-    if (!settings) return 0;
+  // ── Calculate price range ─────────────────────────────────────────────────
+  // First try to use widget pricing tier, fall back to calculation logic
+  const { low, high } = useMemo(() => {
+    if (!settings) return { low: 0, high: 0 };
+
+    // Check for widget pricing tier first
+    const tierPrice = getWidgetPriceRange(homeSqft, activeService, widgetPricingTiers);
+    if (tierPrice) {
+      return tierPrice;
+    }
+
+    // Fall back to calculation logic
+    let mid = 0;
 
     switch (activeService) {
       case "house-washing":
-        return estimateHouseWash(homeSqft, settings);
+        mid = estimateHouseWash(homeSqft, settings);
+        break;
 
       case "gutter-cleaning":
-        return estimateGutterCleaning(homeSqft, settings);
+        // For gutter, use actual silver/gold package pricing
+        return estimateGutterCleaningRange(homeSqft, settings);
 
       case "gutter-protection": {
         const linearFt = Math.round(homeSqft * GUTTER_LIN_FT_PER_SQFT);
-        return estimateGutterProtection(
+        mid = estimateGutterProtection(
           linearFt,
           GUTTER_PROTECTION_PRODUCT_INDEX,
           settings
         );
+        break;
       }
 
       case "window-cleaning": {
         const windows = Math.round(homeSqft * WINDOWS_PER_SQFT);
-        return estimateWindowCleaning(windows, settings);
+        mid = estimateWindowCleaning(windows, settings);
+        break;
       }
 
       case "roof-cleaning": {
         const roofSqft = Math.round(homeSqft * ROOF_SQFT_MULTIPLIER);
-        return estimateRoofCleaning(roofSqft, settings);
+        mid = estimateRoofCleaning(roofSqft, settings);
+        break;
       }
 
       case "driveway":
-        return estimateDriveway(DRIVEWAY_SQFT[drivewaySz], settings);
+        mid = estimateDriveway(DRIVEWAY_SQFT[drivewaySz], settings);
+        break;
 
       case "deck-cleaning":
-        return estimateDeckCleaning(DECK_SQFT[deckSz], settings);
-
-      default:
-        return 0;
+        mid = estimateDeckCleaning(DECK_SQFT[deckSz], settings);
+        break;
     }
-  }, [settings, activeService, homeSqft, drivewaySz, deckSz]);
 
-  const { low, high } = priceRange(mid, RANGE_SPREAD);
+    return priceRange(mid, RANGE_SPREAD);
+  }, [settings, widgetPricingTiers, activeService, homeSqft, drivewaySz, deckSz]);
 
   const isLoading = !settings;
   const needsHomeSize = !["driveway", "deck-cleaning"].includes(activeService);
@@ -404,7 +423,7 @@ export default function App() {
   const needsDeck = activeService === "deck-cleaning";
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-start justify-center p-3">
+    <div className="min-h-screen bg-transparent flex items-start justify-center p-3">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
 
         {/* ── Header ───────────────────────────────────────────────────── */}
@@ -520,7 +539,7 @@ export default function App() {
           <PriceDisplay low={low} high={high} loading={isLoading} />
 
           {/* Disclaimer */}
-          <p className="text-[10px] text-gray-400 text-center leading-relaxed px-2">
+          <p className="text-xs text-gray-500 text-center leading-relaxed px-2">
             Rough estimates only. Actual prices vary based on home condition,
             accessibility, and other factors.{" "}
             <a

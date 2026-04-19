@@ -8,6 +8,7 @@ import { usePricingSettings, validateGutterTiers, validatePaverTiers, type Story
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import AnnualServicePlansSettings from "@/components/AnnualServicePlansSettings";
+import WidgetPricingSettings from "@/components/WidgetPricingSettings";
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -1057,6 +1058,11 @@ export const SettingsPanelContent = () => {
 
         {/* Outdoor Furniture Shrink Wrapping */}
         <ShrinkWrappingSettings />
+
+        {/* Widget Pricing Tiers */}
+        <CollapsibleSettingsSection title="Widget Pricing Tiers" defaultOpen={false}>
+          <WidgetPricingSettings />
+        </CollapsibleSettingsSection>
       </div>
   );
 };

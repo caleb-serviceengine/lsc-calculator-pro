@@ -74,7 +74,7 @@ const Auth = () => {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: 'https://app.lakestatecleaning.com',
+          emailRedirectTo: window.location.origin,
           data: { full_name: fullName.trim() },
         },
       });
@@ -98,7 +98,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'https://app.lakestatecleaning.com/reset-password',
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) toast.error(error.message);
       else {

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { PricingSettings } from "./pricing";
+import type { WidgetPricingTier } from "@/lib/widgetPricingTypes";
 
 // These are public/anon credentials — safe to expose in the browser bundle.
 // The pricing_settings table has an RLS policy that allows anonymous reads.
@@ -36,5 +37,24 @@ export async function fetchPricingSettings(): Promise<PricingSettings> {
   } catch (err) {
     console.warn("[LSC Widget] Network error loading pricing settings, using defaults:", err);
     return DEFAULT_SETTINGS;
+  }
+}
+
+export async function fetchWidgetPricingSettings(): Promise<WidgetPricingTier[]> {
+  try {
+    const { data, error } = await supabase
+      .from("widget_pricing_tiers")
+      .select("*")
+      .order("service_id, min_sqft");
+
+    if (error) {
+      console.warn("[LSC Widget] Could not load widget pricing tiers:", error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.warn("[LSC Widget] Network error loading widget pricing tiers:", err);
+    return [];
   }
 }
