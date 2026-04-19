@@ -100,11 +100,6 @@ export interface AnnualServicePlanSettings {
   dryerVentCleaningValue: number;
 }
 
-export interface Clean365PlanTier {
-  name: string;
-  discountPercent: number;
-}
-
 export interface Clean365Settings {
   enabled: boolean;
   weedRemovalPerVisit: number;
@@ -112,7 +107,7 @@ export interface Clean365Settings {
   outdoorUpholsteryCleaning: number;
   interiorHighDusting: number;
   roofCleaningModifier: number; // percentage applied to base roof price for annual maintenance
-  planTiers: Clean365PlanTier[];
+  discountPercent: number;
 }
 
 export interface PaverTier {
@@ -388,11 +383,7 @@ export const DEFAULT_SETTINGS: PricingSettings = {
     outdoorUpholsteryCleaning: 0,
     interiorHighDusting: 0,
     roofCleaningModifier: 60,
-    planTiers: [
-      { name: "Silver", discountPercent: 10 },
-      { name: "Gold", discountPercent: 15 },
-      { name: "Platinum", discountPercent: 20 },
-    ],
+    discountPercent: 15,
   },
 };
 

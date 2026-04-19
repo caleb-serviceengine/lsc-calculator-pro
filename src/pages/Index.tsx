@@ -124,7 +124,6 @@ const Index = () => {
   const [shrinkWrapAddToBundle, setShrinkWrapAddToBundle] = useState(false);
 
   // Clean365
-  const [clean365Plan, setClean365Plan] = useState<string | null>(null);
   const [clean365AddToBundle, setClean365AddToBundle] = useState(false);
   const [clean365NAServices, setClean365NAServices] = useState<string[]>([]);
 
@@ -448,11 +447,7 @@ const Index = () => {
     }
   }, []);
 
-  // Clean365 selected plan price (now respects N/A exclusions via component's own calc)
   const clean365SelectedPrice = useMemo(() => {
-    if (!clean365Plan) return 0;
-    const tier = settings.clean365.planTiers.find(t => t.name.toLowerCase() === clean365Plan);
-    if (!tier) return 0;
     const p = clean365SourcePrices;
     const c = settings.clean365;
     const isNA = (key: string) => clean365NAServices.includes(key);
@@ -471,12 +466,11 @@ const Index = () => {
       (isNA("garbageCans") ? 0 : c.garbageCansPerVisit * 4) +
       (isNA("outdoorUpholstery") ? 0 : c.outdoorUpholsteryCleaning) +
       (isNA("interiorDusting") ? 0 : c.interiorHighDusting);
-    return aLaCarte * (1 - tier.discountPercent / 100);
-  }, [clean365Plan, clean365SourcePrices, settings.clean365, clean365NAServices]);
+    return aLaCarte * (1 - c.discountPercent / 100);
+  }, [clean365SourcePrices, settings.clean365, clean365NAServices]);
 
-  // Clean365 data for sell sheet modal
   const clean365DataForSellSheet = useMemo(() => {
-    if (!clean365Plan) return null;
+    if (!clean365AddToBundle || clean365SelectedPrice <= 0) return null;
     const p = clean365SourcePrices;
     const c = settings.clean365;
     const isNA = (key: string) => clean365NAServices.includes(key);
@@ -495,12 +489,16 @@ const Index = () => {
       (isNA("garbageCans") ? 0 : c.garbageCansPerVisit * 4) +
       (isNA("outdoorUpholstery") ? 0 : c.outdoorUpholsteryCleaning) +
       (isNA("interiorDusting") ? 0 : c.interiorHighDusting);
-    const tiers = c.planTiers.map((tier) => {
-      const annual = aLaCarteTotal * (1 - tier.discountPercent / 100);
-      return { name: tier.name, discountPercent: tier.discountPercent, annual, monthly: annual / 12, savings: aLaCarteTotal - annual };
-    });
-    return { selectedPlan: clean365Plan, aLaCarteTotal, tiers, propertySpecs: property };
-  }, [clean365Plan, clean365SourcePrices, settings.clean365, property, clean365NAServices]);
+    const annualPrice = aLaCarteTotal * (1 - c.discountPercent / 100);
+    return {
+      aLaCarteTotal,
+      annualPrice,
+      monthlyPrice: annualPrice / 12,
+      savings: aLaCarteTotal - annualPrice,
+      discountPercent: c.discountPercent,
+      propertySpecs: property,
+    };
+  }, [clean365AddToBundle, clean365SelectedPrice, clean365SourcePrices, settings.clean365, property, clean365NAServices]);
 
   const bundleItems = useMemo(() => {
     const items: { label: string; price: number }[] = [];
@@ -626,13 +624,12 @@ const Index = () => {
     }
 
     // Clean365 Annual Maintenance Plan
-    if (clean365AddToBundle && clean365Plan && clean365SelectedPrice > 0) {
-      const tierName = clean365Plan.charAt(0).toUpperCase() + clean365Plan.slice(1);
-      items.push({ label: `Clean365 ${tierName} Plan`, price: clean365SelectedPrice });
+    if (clean365AddToBundle && clean365SelectedPrice > 0) {
+      items.push({ label: "Clean365 Annual Plan", price: clean365SelectedPrice });
     }
 
     return items;
-  }, [houseWashPackage, houseWashPrice, gutterPackage, gutterPrices, gutterHasErrors, drainSelected, brighteningSelected, annualPlanBundle, annualPlan, aspSelectedPlanPrice, gpSelectedProduct, gpPrices, roofPlatinumSelected, roofPlatinumPrice, goNanoSelected, goNanoPrice, surfaceSelected, surfaceSealingPrices, settings.surfaceSealingRates, paverPackage, paverPkgPrices, paverHasErrors, dryerVentSelected, dryerVentPrice, flatworkTotal, flatworkCheckedAreas, archAddToBundle, archCalc, fenceAddToBundle, fencePrice, deckAddToBundle, deckPrice, shrinkWrapAddToBundle, shrinkWrapPrice, customItems, clean365AddToBundle, clean365Plan, clean365SelectedPrice]);
+  }, [houseWashPackage, houseWashPrice, gutterPackage, gutterPrices, gutterHasErrors, drainSelected, brighteningSelected, annualPlanBundle, annualPlan, aspSelectedPlanPrice, gpSelectedProduct, gpPrices, roofPlatinumSelected, roofPlatinumPrice, goNanoSelected, goNanoPrice, surfaceSelected, surfaceSealingPrices, settings.surfaceSealingRates, paverPackage, paverPkgPrices, paverHasErrors, dryerVentSelected, dryerVentPrice, flatworkTotal, flatworkCheckedAreas, archAddToBundle, archCalc, fenceAddToBundle, fencePrice, deckAddToBundle, deckPrice, shrinkWrapAddToBundle, shrinkWrapPrice, customItems, clean365AddToBundle, clean365SelectedPrice]);
 
   const getCalculatorState = useCallback(() => ({
     sqft, twoStory, threeStory, detachedGarage,
@@ -647,9 +644,9 @@ const Index = () => {
     fencePanelFt, fenceAddToBundle, fencePanelMaterial, fenceRailFt, fenceRailMaterial, fenceStainLevel,
     deckMaterial, deckStainLevel, deckSurfaceSqft, deckUndersideCleaning, deckRailingFt, deckStepCount, deckAddToBundle,
     shrinkWrapLarge, shrinkWrapSmall, shrinkWrapAddToBundle,
-    clean365Plan, clean365AddToBundle,
+    clean365AddToBundle,
     customItems,
-  }), [sqft, twoStory, threeStory, detachedGarage, windowCount, sidingType, stainLevel, nonOrganicStains, houseWashPackage, gutterPackage, undergroundDrains, brighteningFt, drainSelected, brighteningSelected, gpLinearFeet, gpDownspouts, gpGutterStickQty, gpSelectedProduct, roofSqft, surfaceType, difficultyLevel, heavyMossLichen, noGutters, roofPlatinumSelected, goNanoSelected, surfaceSqfts, surfaceSelected, paverSqft, paverPackage, dryerVentQty, dryerVentSelected, flatworkAreas, archAreas, archAddToBundle, fencePanelFt, fenceAddToBundle, fencePanelMaterial, fenceRailFt, fenceRailMaterial, fenceStainLevel, deckMaterial, deckStainLevel, deckSurfaceSqft, deckUndersideCleaning, deckRailingFt, deckStepCount, deckAddToBundle, shrinkWrapLarge, shrinkWrapSmall, shrinkWrapAddToBundle, clean365Plan, clean365AddToBundle, customItems]);
+  }), [sqft, twoStory, threeStory, detachedGarage, windowCount, sidingType, stainLevel, nonOrganicStains, houseWashPackage, gutterPackage, undergroundDrains, brighteningFt, drainSelected, brighteningSelected, gpLinearFeet, gpDownspouts, gpGutterStickQty, gpSelectedProduct, roofSqft, surfaceType, difficultyLevel, heavyMossLichen, noGutters, roofPlatinumSelected, goNanoSelected, surfaceSqfts, surfaceSelected, paverSqft, paverPackage, dryerVentQty, dryerVentSelected, flatworkAreas, archAreas, archAddToBundle, fencePanelFt, fenceAddToBundle, fencePanelMaterial, fenceRailFt, fenceRailMaterial, fenceStainLevel, deckMaterial, deckStainLevel, deckSurfaceSqft, deckUndersideCleaning, deckRailingFt, deckStepCount, deckAddToBundle, shrinkWrapLarge, shrinkWrapSmall, shrinkWrapAddToBundle, clean365AddToBundle, customItems]);
 
   const restoreCalculatorState = useCallback((s: any) => {
     if (!s) return;
@@ -703,7 +700,6 @@ const Index = () => {
     if (s.shrinkWrapLarge !== undefined) setShrinkWrapLarge(s.shrinkWrapLarge);
     if (s.shrinkWrapSmall !== undefined) setShrinkWrapSmall(s.shrinkWrapSmall);
     if (s.shrinkWrapAddToBundle !== undefined) setShrinkWrapAddToBundle(s.shrinkWrapAddToBundle);
-    if (s.clean365Plan !== undefined) setClean365Plan(s.clean365Plan);
     if (s.clean365AddToBundle !== undefined) setClean365AddToBundle(s.clean365AddToBundle);
     if (s.customItems !== undefined) setCustomItems(s.customItems);
   }, []);
@@ -724,7 +720,7 @@ const Index = () => {
       fencePanelFt: "", fenceAddToBundle: false, fencePanelMaterial: "Wood Panel", fenceRailFt: "", fenceRailMaterial: "Wood Rail", fenceStainLevel: "Standard",
       deckMaterial: "Common Wood", deckStainLevel: "Standard", deckSurfaceSqft: "", deckUndersideCleaning: false, deckRailingFt: "", deckStepCount: "", deckAddToBundle: false,
       shrinkWrapLarge: 0, shrinkWrapSmall: 0, shrinkWrapAddToBundle: false,
-      clean365Plan: null, clean365AddToBundle: false,
+      clean365AddToBundle: false,
       customItems: [],
     });
     toast.success("Started new bid");
@@ -745,7 +741,7 @@ const Index = () => {
       fencePanelFt: "", fenceAddToBundle: false, fencePanelMaterial: "Wood Panel", fenceRailFt: "", fenceRailMaterial: "Wood Rail", fenceStainLevel: "Standard",
       deckMaterial: "Common Wood", deckStainLevel: "Standard", deckSurfaceSqft: "", deckUndersideCleaning: false, deckRailingFt: "", deckStepCount: "", deckAddToBundle: false,
       shrinkWrapLarge: 0, shrinkWrapSmall: 0, shrinkWrapAddToBundle: false,
-      clean365Plan: null, clean365AddToBundle: false,
+      clean365AddToBundle: false,
       customItems: [],
     });
     toast.success("Calculator reset");
@@ -779,8 +775,6 @@ const Index = () => {
                 <Clean365PreviewCard
                   sourcePrices={clean365SourcePrices}
                   clean365Settings={settings.clean365}
-                  selectedPlan={clean365Plan}
-                  onSelectPlan={setClean365Plan}
                   addToBundle={clean365AddToBundle}
                   onAddToBundleChange={setClean365AddToBundle}
                   serviceStatus={clean365ServiceStatus}
@@ -1045,7 +1039,7 @@ const Index = () => {
           </div>
 
           <div>
-            <BundleSummary items={bundleItems} currentBid={currentBid} calculatorState={getCalculatorState()} selectedClean365Plan={clean365Plan} clean365Data={clean365DataForSellSheet} />
+            <BundleSummary items={bundleItems} currentBid={currentBid} calculatorState={getCalculatorState()} clean365Data={clean365DataForSellSheet} />
           </div>
         </div>
       </div>

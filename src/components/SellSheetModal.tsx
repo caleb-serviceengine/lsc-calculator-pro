@@ -9,9 +9,11 @@ import { toast } from "sonner";
 import { generateSellSheetHTML } from "@/utils/sellSheetTemplate";
 
 interface Clean365Data {
-  selectedPlan: string;
   aLaCarteTotal: number;
-  tiers: { name: string; discountPercent: number; annual: number; monthly: number; savings: number }[];
+  annualPrice: number;
+  monthlyPrice: number;
+  savings: number;
+  discountPercent: number;
   propertySpecs: { sqft: number; twoStory: boolean; threeStory: boolean; detachedGarage: boolean };
 }
 
@@ -22,16 +24,6 @@ interface SellSheetModalProps {
   existingBidId?: string;
   existingCustomerInfo?: { name?: string; email?: string; phone?: string; address?: string };
   existingSellSheetId?: string;
-}
-
-function getTierData(tiers: Clean365Data["tiers"], name: string) {
-  const tier = tiers.find((t) => t.name.toLowerCase() === name.toLowerCase());
-  return {
-    monthly: tier?.monthly ?? 0,
-    annual: tier?.annual ?? 0,
-    savings: tier?.savings ?? 0,
-    discount: tier?.discountPercent ?? 0,
-  };
 }
 
 function buildStories(specs: Clean365Data["propertySpecs"]): string {
@@ -70,10 +62,11 @@ const SellSheetModal = ({ isOpen, onClose, clean365Data, existingBidId, existing
           customerAddress: existingCustomerInfo?.address,
           propertySpecs: { sqft: clean365Data.propertySpecs.sqft, stories: buildStories(clean365Data.propertySpecs) },
           pricing: {
-            silver: getTierData(clean365Data.tiers, "silver"),
-            gold: getTierData(clean365Data.tiers, "gold"),
-            platinum: getTierData(clean365Data.tiers, "platinum"),
             aLaCarteTotal: clean365Data.aLaCarteTotal,
+            annualPrice: clean365Data.annualPrice,
+            monthlyPrice: clean365Data.monthlyPrice,
+            savings: clean365Data.savings,
+            discountPercent: clean365Data.discountPercent,
           },
           quoteDate: new Date().toLocaleDateString(),
           sellSheetId: existingSellSheetId,
@@ -102,9 +95,11 @@ const SellSheetModal = ({ isOpen, onClose, clean365Data, existingBidId, existing
         customerEmail: customerEmail.trim() || null,
         customerPhone: customerPhone.trim() || null,
         customerAddress: customerAddress.trim() || null,
-        selectedPlan: clean365Data.selectedPlan,
         aLaCarteTotal: clean365Data.aLaCarteTotal,
-        tier: clean365Data.tiers.find((t) => t.name.toLowerCase() === clean365Data.selectedPlan.toLowerCase()) ?? null,
+        annualPrice: clean365Data.annualPrice,
+        monthlyPrice: clean365Data.monthlyPrice,
+        savings: clean365Data.savings,
+        discountPercent: clean365Data.discountPercent,
         propertySpecs: clean365Data.propertySpecs,
         quoteDate: new Date().toISOString(),
       };
@@ -116,10 +111,11 @@ const SellSheetModal = ({ isOpen, onClose, clean365Data, existingBidId, existing
         customerAddress: customerAddress.trim() || undefined,
         propertySpecs: { sqft: clean365Data.propertySpecs.sqft, stories: buildStories(clean365Data.propertySpecs) },
         pricing: {
-          silver: getTierData(clean365Data.tiers, "silver"),
-          gold: getTierData(clean365Data.tiers, "gold"),
-          platinum: getTierData(clean365Data.tiers, "platinum"),
           aLaCarteTotal: clean365Data.aLaCarteTotal,
+          annualPrice: clean365Data.annualPrice,
+          monthlyPrice: clean365Data.monthlyPrice,
+          savings: clean365Data.savings,
+          discountPercent: clean365Data.discountPercent,
         },
         quoteDate,
         sellSheetId: id,
@@ -242,10 +238,10 @@ const SellSheetModal = ({ isOpen, onClose, clean365Data, existingBidId, existing
 
             <div className="bg-muted/50 rounded-lg p-3 text-sm">
               <p className="font-medium text-card-foreground">
-                Plan: {clean365Data.selectedPlan.charAt(0).toUpperCase() + clean365Data.selectedPlan.slice(1)}
+                Clean365 Annual Plan — {clean365Data.discountPercent}% off
               </p>
               <p className="text-muted-foreground">
-                A La Carte Value: ${clean365Data.aLaCarteTotal.toFixed(2)}
+                À La Carte Value: ${clean365Data.aLaCarteTotal.toFixed(2)} → ${clean365Data.annualPrice.toFixed(2)}/yr
               </p>
             </div>
 

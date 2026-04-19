@@ -10,24 +10,24 @@ export type ServiceConfigStatus = "configured" | "missing" | "na";
 
 export interface ServiceStatusEntry {
   status: ServiceConfigStatus;
-  price: number; // price when configured, 0 otherwise
-  sectionTitle?: string; // for scrolling to section
+  price: number;
+  sectionTitle?: string;
 }
 
 export type ServiceStatusMap = Record<string, ServiceStatusEntry>;
 
 const SERVICE_SCHEDULE = [
-  { service: "Gutter Cleaning", key: "gutterCleaning", q1: true, q2: true, q3: true, q4: true },
+  { service: "Gutter Cleaning (Silver Package)", key: "gutterCleaning", q1: true, q2: true, q3: true, q4: true },
   { service: "Dryer Vent Cleaning", key: "dryerVent", q1: true, q2: false, q3: false, q4: false },
   { service: "Interior High Dusting: Cabinets, Ceiling Fans, Fixtures", key: "interiorDusting", q1: true, q2: false, q3: false, q4: false },
   { service: "Garage Power Washing", key: "garagePW", q1: true, q2: false, q3: false, q4: false },
-  { service: "Exterior Window & Screen Cleaning", key: "windowCleaning", q1: true, q2: false, q3: false, q4: true },
-  { service: "House Washing: Detergent Wash & Rinse", key: "houseWashing", q1: false, q2: true, q3: false, q4: false },
+  { service: "Window Cleaning (Spot Free Exterior)", key: "windowCleaning", q1: true, q2: false, q3: false, q4: true },
+  { service: "House Washing (Silver Package)", key: "houseWashing", q1: false, q2: true, q3: false, q4: false },
   { service: "Gutter Brightening: Outside Faces & Downspouts", key: "gutterBrightening", q1: false, q2: true, q3: false, q4: false },
   { service: "Power Washing: Porches, Decks, Patios", key: "deckPW", q1: false, q2: true, q3: false, q4: false },
-  { service: "Weed Removal: Patios, Walkways, Driveways", key: "weedRemoval", q1: false, q2: true, q3: true, q4: false },
+  { service: "Weed Removal (Included)", key: "weedRemoval", q1: false, q2: true, q3: true, q4: false },
   { service: "Power Washing: Driveway, Sidewalks", key: "drivewayPW", q1: false, q2: false, q3: true, q4: false },
-  { service: "Roof Cleaning: Debris Removal, Biostat Application", key: "roofCleaning", q1: false, q2: false, q3: true, q4: false },
+  { service: "Roof Cleaning (Annual Maintenance Rate)", key: "roofCleaning", q1: false, q2: false, q3: true, q4: false },
   { service: "Outdoor Upholstery Cleaning", key: "outdoorUpholstery", q1: false, q2: false, q3: true, q4: false },
   { service: "Outdoor Furniture Shrink Wrapping", key: "furnitureWrap", q1: false, q2: false, q3: false, q4: true },
   { service: "Garbage Cans Cleaned & Sanitized", key: "garbageCans", q1: true, q2: true, q3: true, q4: true },
@@ -50,8 +50,6 @@ export interface Clean365SourcePrices {
 interface Clean365PreviewCardProps {
   sourcePrices: Clean365SourcePrices;
   clean365Settings: Clean365Settings;
-  selectedPlan: string | null;
-  onSelectPlan: (plan: string | null) => void;
   addToBundle: boolean;
   onAddToBundleChange: (v: boolean) => void;
   serviceStatus: ServiceStatusMap;
@@ -63,8 +61,6 @@ interface Clean365PreviewCardProps {
 const Clean365PreviewCard = ({
   sourcePrices,
   clean365Settings,
-  selectedPlan,
-  onSelectPlan,
   addToBundle,
   onAddToBundleChange,
   serviceStatus,
@@ -94,7 +90,6 @@ const Clean365PreviewCard = ({
     const garagePW = isNA("garagePW") ? 0 : p.flatworkGaragePrice;
     const roofCleaning = isNA("roofCleaning") ? 0 : p.roofCleaningPrice;
     const furnitureShrinkWrap = isNA("furnitureWrap") ? 0 : p.shrinkWrapPrice;
-
     const weedRemoval = isNA("weedRemoval") ? 0 : c.weedRemovalPerVisit * 3;
     const garbageCans = isNA("garbageCans") ? 0 : c.garbageCansPerVisit * 4;
     const outdoorUpholstery = isNA("outdoorUpholstery") ? 0 : c.outdoorUpholsteryCleaning;
@@ -106,23 +101,9 @@ const Clean365PreviewCard = ({
       outdoorUpholstery + interiorDusting;
   }, [sourcePrices, c, naServices]);
 
-  const tierCalcs = useMemo(() => {
-    return c.planTiers.map((tier) => {
-      const annual = aLaCarteTotal * (1 - tier.discountPercent / 100);
-      const monthly = annual / 12;
-      const savings = aLaCarteTotal - annual;
-      return { name: tier.name, discountPercent: tier.discountPercent, annual, monthly, savings };
-    });
-  }, [aLaCarteTotal, c.planTiers]);
-
-  const selectedTierCalc = selectedPlan
-    ? tierCalcs.find((t) => t.name.toLowerCase() === selectedPlan)
-    : null;
-
-  const badgeConfig: Record<number, { label: string; colorClass: string }> = {
-    1: { label: "MOST POPULAR", colorClass: "primary" },
-    2: { label: "BEST VALUE", colorClass: "amber" },
-  };
+  const annualPrice = aLaCarteTotal * (1 - c.discountPercent / 100);
+  const monthlyPrice = annualPrice / 12;
+  const savings = aLaCarteTotal - annualPrice;
 
   if (!c.enabled) return null;
 
@@ -150,7 +131,6 @@ const Clean365PreviewCard = ({
       );
     }
 
-    // missing
     return (
       <div className="flex items-center gap-1.5">
         <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -169,7 +149,6 @@ const Clean365PreviewCard = ({
   const renderActionCell = (serviceKey: string) => {
     const entry = serviceStatus[serviceKey];
     if (!entry) return null;
-    // Touch-ups row has no actions
     if (serviceKey === "touchUps") return null;
 
     const isNA = naServices.includes(serviceKey);
@@ -218,81 +197,45 @@ const Clean365PreviewCard = ({
         </div>
       )}
 
-      {/* Plan Selector */}
+      {/* Single Plan Card */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-card-foreground mb-3">Select Your Plan</label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {tierCalcs.map((tier, i) => {
-            const planKey = tier.name.toLowerCase();
-            const isSelected = selectedPlan === planKey;
-            const badge = badgeConfig[i];
+        <div className="border-2 border-primary bg-primary/5 shadow-md rounded-xl p-5">
+          <div className="text-center text-sm font-bold text-primary bg-primary/10 -mx-5 -mt-5 px-5 pt-3 pb-3 rounded-t-xl mb-4">
+            CLEAN365 ANNUAL MAINTENANCE PLAN
+          </div>
 
-            return (
-              <div
-                key={tier.name}
-                onClick={() => onSelectPlan(isSelected ? null : planKey)}
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                  isSelected
-                    ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border hover:border-primary/30"
-                }`}
-              >
-                {badge && (
-                  <div className={`-mx-4 -mt-4 px-4 pt-2 pb-3 rounded-t-lg mb-4 ${
-                    badge.colorClass === "primary" ? "bg-primary/10" : "bg-amber-500/10"
-                  }`}>
-                    <div className={`text-center text-sm font-bold ${
-                      badge.colorClass === "primary" ? "text-primary" : "text-amber-500"
-                    }`}>
-                      {badge.label}
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-3">
-                  <input
-                    type="radio"
-                    checked={isSelected}
-                    readOnly
-                    className="mt-1 accent-[hsl(var(--primary))]"
-                  />
-                  <div className="flex-1">
-                    <div className="text-lg font-bold text-card-foreground mb-2">{tier.name} Plan</div>
-
-                    {aLaCarteTotal > 0 ? (
-                      <>
-                        <div className="text-3xl font-bold text-primary my-2">
-                          ${tier.monthly.toFixed(0)}
-                          <span className="text-base font-medium text-muted-foreground">/mo</span>
-                        </div>
-                        <div className="text-sm space-y-1">
-                          <div className="text-muted-foreground">
-                            Annual Total: ${tier.annual.toFixed(2)}
-                          </div>
-                          <div className="text-muted-foreground">
-                            A La Carte Value: ${aLaCarteTotal.toFixed(2)}
-                          </div>
-                          {tier.savings > 0 && (
-                            <div className="text-green-600 font-semibold">
-                              You Save: ${tier.savings.toFixed(2)} ({tier.discountPercent}%)
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Enter service details above to calculate pricing
-                      </p>
-                    )}
-                  </div>
+          {aLaCarteTotal > 0 ? (
+            <div className="text-center">
+              <div className="text-4xl font-bold text-primary mb-1">
+                ${monthlyPrice.toFixed(0)}
+                <span className="text-base font-medium text-muted-foreground">/mo</span>
+              </div>
+              <div className="text-sm text-muted-foreground mb-4">Billed annually at ${annualPrice.toFixed(2)}</div>
+              <div className="grid grid-cols-3 gap-3 text-sm">
+                <div className="bg-muted/40 rounded-lg p-3">
+                  <div className="font-semibold text-card-foreground">${aLaCarteTotal.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">À La Carte Value</div>
+                </div>
+                <div className="bg-muted/40 rounded-lg p-3">
+                  <div className="font-semibold text-card-foreground">${annualPrice.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Annual Total</div>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="font-semibold text-green-700">${savings.toFixed(2)}</div>
+                  <div className="text-xs text-green-600 mt-0.5">You Save ({c.discountPercent}%)</div>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Enter service details above to calculate pricing
+            </p>
+          )}
         </div>
       </div>
 
       {/* Add to Bundle */}
-      {selectedPlan && selectedTierCalc && selectedTierCalc.annual > 0 && (
+      {aLaCarteTotal > 0 && annualPrice > 0 && (
         <div className="flex items-center gap-3 mb-6 p-4 border border-border rounded-xl bg-muted/20">
           <Checkbox
             checked={addToBundle}
@@ -300,13 +243,13 @@ const Clean365PreviewCard = ({
             id="clean365-bundle"
           />
           <Label htmlFor="clean365-bundle" className="text-sm font-medium text-card-foreground cursor-pointer flex-1">
-            Add Clean365 {selectedTierCalc.name} Plan to Bundle
+            Add Clean365 Annual Plan to Bundle
           </Label>
           <span className="text-sm font-bold text-primary">
-            ${selectedTierCalc.annual.toFixed(2)}/year
+            ${annualPrice.toFixed(2)}/year
           </span>
           <span className="text-xs text-muted-foreground">
-            (${selectedTierCalc.monthly.toFixed(2)}/mo)
+            (${monthlyPrice.toFixed(2)}/mo)
           </span>
         </div>
       )}
@@ -340,9 +283,7 @@ const Clean365PreviewCard = ({
                 return (
                   <tr key={i} className={`border-b border-border ${isNA ? "opacity-50" : ""} ${i % 2 === 0 ? "bg-muted/30" : ""}`}>
                     <td className={`py-2 px-3 text-card-foreground ${row.bold ? "font-bold" : ""} ${isNA ? "line-through" : ""}`}>{row.service}</td>
-                    <td className="text-center px-2">
-                      {renderStatusCell(row.key)}
-                    </td>
+                    <td className="text-center px-2">{renderStatusCell(row.key)}</td>
                     {[row.q1, row.q2, row.q3, row.q4].map((active, qi) => (
                       <td key={qi} className="text-center">
                         {active ? (
@@ -352,9 +293,7 @@ const Clean365PreviewCard = ({
                         )}
                       </td>
                     ))}
-                    <td className="text-center px-2">
-                      {renderActionCell(row.key)}
-                    </td>
+                    <td className="text-center px-2">{renderActionCell(row.key)}</td>
                   </tr>
                 );
               })}
@@ -380,7 +319,7 @@ const Clean365PreviewCard = ({
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li>✓ <strong className="text-card-foreground">Year-round protection</strong> — Your property maintained every season</li>
           <li>✓ <strong className="text-card-foreground">Priority scheduling</strong> — Lock in your preferred dates</li>
-          <li>✓ <strong className="text-card-foreground">Guaranteed savings</strong> — {c.planTiers[0]?.discountPercent}–{c.planTiers[c.planTiers.length - 1]?.discountPercent}% off vs. individual services</li>
+          <li>✓ <strong className="text-card-foreground">Guaranteed savings</strong> — {c.discountPercent}% off vs. individual services</li>
           <li>✓ <strong className="text-card-foreground">Weather-optimized</strong> — Services scheduled at ideal times</li>
           <li>✓ <strong className="text-card-foreground">No November rush</strong> — Avoid the fall gutter cleaning surge</li>
           <li>✓ <strong className="text-card-foreground">Smooth cash flow</strong> — Quarterly billing or annual prepay</li>

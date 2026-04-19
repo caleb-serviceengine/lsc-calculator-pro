@@ -1612,12 +1612,6 @@ const Clean365MaintenanceSettings = () => {
     updateSettings({ clean365: { ...c, ...partial } });
   };
 
-  const updateTier = (index: number, field: "name" | "discountPercent", value: string | number) => {
-    const updated = [...c.planTiers];
-    updated[index] = { ...updated[index], [field]: value };
-    update({ planTiers: updated });
-  };
-
   const clamp = (val: number, min: number, max: number) => Math.min(max, Math.max(min, val));
 
   return (
@@ -1722,36 +1716,22 @@ const Clean365MaintenanceSettings = () => {
         </p>
       </div>
 
-      {/* Plan Tier Configuration */}
+      {/* Annual Plan Discount */}
       <div>
-        <h3 className="text-sm font-semibold text-card-foreground mb-3">Plan Tier Configuration</h3>
-        <div className="space-y-3">
-          {c.planTiers.map((tier, i) => (
-            <div key={i} className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-card-foreground w-24">Tier {i + 1} Name</Label>
-                <Input
-                  type="text"
-                  value={tier.name}
-                  onChange={(e) => updateTier(i, "name", e.target.value)}
-                  className="w-32 bg-white border-border text-card-foreground"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-card-foreground">Discount</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={tier.discountPercent}
-                  onChange={(e) => updateTier(i, "discountPercent", clamp(parseFloat(e.target.value) || 0, 0, 100))}
-                  className="w-20 bg-white border-border text-card-foreground"
-                />
-                <span className="text-sm text-muted-foreground">%</span>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center gap-2">
+          <Label className="text-sm text-card-foreground w-52">Clean365 Annual Plan Discount</Label>
+          <Input
+            type="number"
+            step="1"
+            min={0}
+            max={100}
+            value={c.discountPercent}
+            onChange={(e) => update({ discountPercent: clamp(parseFloat(e.target.value) || 0, 0, 100) })}
+            className="w-20 bg-white border-border text-card-foreground"
+          />
+          <span className="text-sm text-muted-foreground">%</span>
         </div>
+        <p className="text-xs text-muted-foreground mt-1 ml-1">Applied to the à la carte total to calculate the annual plan price.</p>
       </div>
     </CollapsibleSettingsSection>
   );

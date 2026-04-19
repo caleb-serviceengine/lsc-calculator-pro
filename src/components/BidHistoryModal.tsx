@@ -85,18 +85,11 @@ const BidHistoryModal = ({ isOpen, onClose, onLoadBid, currentBidId, onClearCurr
 
   const hasClean365Data = (bid: SavedBid) => {
     const bd = bid.bundle_data;
-    return bd && (bd.clean365Plan || bd.selectedClean365Plan || bd.clean365Data);
+    return bd && bd.clean365Data;
   };
 
   const extractClean365Data = (bid: SavedBid) => {
-    const bd = bid.bundle_data;
-    if (bd.clean365Data) return bd.clean365Data;
-    return {
-      selectedPlan: bd.clean365Plan || bd.selectedClean365Plan || "silver",
-      aLaCarteTotal: bd.aLaCarteTotal || bid.total_price,
-      tiers: bd.clean365Tiers || [],
-      propertySpecs: bd.propertySpecs || { sqft: 0, twoStory: false, threeStory: false, detachedGarage: false },
-    };
+    return bid.bundle_data?.clean365Data ?? null;
   };
 
   useEffect(() => {

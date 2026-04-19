@@ -13,9 +13,11 @@ interface BundleItem {
 }
 
 interface Clean365DataForSellSheet {
-  selectedPlan: string;
   aLaCarteTotal: number;
-  tiers: { name: string; discountPercent: number; annual: number; monthly: number; savings: number }[];
+  annualPrice: number;
+  monthlyPrice: number;
+  savings: number;
+  discountPercent: number;
   propertySpecs: { sqft: number; twoStory: boolean; threeStory: boolean; detachedGarage: boolean };
 }
 
@@ -23,17 +25,16 @@ interface BundleSummaryProps {
   items: BundleItem[];
   currentBid?: { bid_id: string; customer_name: string; status: "draft" | "sent" | "won" | "lost" } | null;
   calculatorState?: Record<string, unknown>;
-  selectedClean365Plan?: string | null;
   clean365Data?: Clean365DataForSellSheet | null;
 }
 
-const BundleSummary = ({ items, currentBid, calculatorState, selectedClean365Plan, clean365Data }: BundleSummaryProps) => {
+const BundleSummary = ({ items, currentBid, calculatorState, clean365Data }: BundleSummaryProps) => {
   const [discountDollar, setDiscountDollar] = useState("");
   const [discountPercent, setDiscountPercent] = useState("");
   const [saveBidOpen, setSaveBidOpen] = useState(false);
   const [showSellSheetModal, setShowSellSheetModal] = useState(false);
 
-  const isSellSheetEnabled = !!selectedClean365Plan;
+  const isSellSheetEnabled = !!clean365Data;
 
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
 
@@ -154,7 +155,7 @@ const BundleSummary = ({ items, currentBid, calculatorState, selectedClean365Pla
           </TooltipTrigger>
           {!isSellSheetEnabled && (
             <TooltipContent>
-              <p>Select a Clean365 plan first</p>
+              <p>Add Clean365 to bundle first</p>
             </TooltipContent>
           )}
         </Tooltip>

@@ -8,10 +8,11 @@ interface SellSheetData {
     stories: string;
   };
   pricing: {
-    silver: { monthly: number; annual: number; savings: number; discount: number };
-    gold: { monthly: number; annual: number; savings: number; discount: number };
-    platinum: { monthly: number; annual: number; savings: number; discount: number };
     aLaCarteTotal: number;
+    annualPrice: number;
+    monthlyPrice: number;
+    savings: number;
+    discountPercent: number;
   };
   quoteDate: string;
   sellSheetId: string;
@@ -55,21 +56,18 @@ export function generateSellSheetHTML(data: SellSheetData): string {
   .alacarte-bar span{font-size:14px;color:#64748b}
   .alacarte-bar strong{font-size:18px;color:#1e293b}
 
-  .tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:0 48px 32px}
-  .tier-card{border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;text-align:center;transition:box-shadow .2s}
-  .tier-card.recommended{border-color:#2563eb;box-shadow:0 4px 24px rgba(37,99,235,.12)}
-  .tier-badge{padding:10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
-  .tier-silver .tier-badge{background:#f1f5f9;color:#64748b}
-  .tier-gold .tier-badge{background:#fef3c7;color:#92400e}
-  .tier-platinum .tier-badge{background:#1e3a5f;color:#fff}
-  .tier-body{padding:24px 16px}
-  .tier-monthly{font-size:32px;font-weight:800;color:#1e293b}
-  .tier-monthly span{font-size:15px;font-weight:400;color:#94a3b8}
-  .tier-annual{margin-top:6px;font-size:14px;color:#64748b}
-  .tier-savings{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600}
-  .tier-silver .tier-savings{background:#f0fdf4;color:#16a34a}
-  .tier-gold .tier-savings{background:#fef3c7;color:#d97706}
-  .tier-platinum .tier-savings{background:#eff6ff;color:#2563eb}
+  .plan-card{margin:0 48px 32px;border:2px solid #2563eb;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(37,99,235,.12)}
+  .plan-card-header{padding:14px 24px;background:#1e3a5f;text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff}
+  .plan-card-body{padding:32px 24px;text-align:center}
+  .plan-monthly{font-size:48px;font-weight:800;color:#1e3a5f}
+  .plan-monthly span{font-size:18px;font-weight:400;color:#94a3b8}
+  .plan-annual{margin-top:6px;font-size:16px;color:#64748b}
+  .plan-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+  .plan-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px}
+  .plan-stat-value{font-size:18px;font-weight:700;color:#1e293b}
+  .plan-stat-label{font-size:12px;color:#94a3b8;margin-top:2px}
+  .plan-savings{background:#f0fdf4;border-color:#bbf7d0}
+  .plan-savings .plan-stat-value{color:#16a34a}
 
   .schedule{padding:0 48px 32px}
   .schedule h3{font-size:17px;font-weight:700;margin-bottom:14px;color:#1e293b}
@@ -89,11 +87,9 @@ export function generateSellSheetHTML(data: SellSheetData): string {
     .page{box-shadow:none}
   }
   @media(max-width:640px){
-    .tier-grid{grid-template-columns:1fr}
     .schedule-grid{grid-template-columns:repeat(2,1fr)}
     .customer-header,.brand-header,.intro,.schedule,.footer{padding-left:24px;padding-right:24px}
-    .alacarte-bar,.property-specs{margin-left:24px;margin-right:24px}
-    .tier-grid{padding:0 24px 32px}
+    .alacarte-bar,.property-specs,.plan-card{margin-left:24px;margin-right:24px}
   }
 </style>
 </head>
@@ -118,7 +114,7 @@ export function generateSellSheetHTML(data: SellSheetData): string {
 
   <!-- Intro -->
   <div class="intro">
-    <p>Your home receives <strong>26 professional services</strong> throughout the year — gutters, house wash, roof treatment, dryer vent, and more — bundled at a discount off individual pricing.</p>
+    <p>Your home receives <strong>26 professional services</strong> throughout the year — gutters, house wash, roof treatment, dryer vent, and more — bundled at <strong>${pricing.discountPercent}% off</strong> individual pricing.</p>
   </div>
 
   <!-- A La Carte Total -->
@@ -127,33 +123,25 @@ export function generateSellSheetHTML(data: SellSheetData): string {
     <strong>$${fmt(pricing.aLaCarteTotal)}</strong>
   </div>
 
-  <!-- Tier Cards -->
-  <div class="tier-grid">
-    <!-- Silver -->
-    <div class="tier-card tier-silver">
-      <div class="tier-badge">Silver</div>
-      <div class="tier-body">
-        <div class="tier-monthly">$${fmt(pricing.silver.monthly)}<span>/mo</span></div>
-        <div class="tier-annual">$${fmt(pricing.silver.annual)} / year</div>
-        <div class="tier-savings">Save ${pricing.silver.discount}% · $${fmt(pricing.silver.savings)} off</div>
-      </div>
-    </div>
-    <!-- Gold -->
-    <div class="tier-card tier-gold recommended">
-      <div class="tier-badge">★ Gold — Best Value</div>
-      <div class="tier-body">
-        <div class="tier-monthly">$${fmt(pricing.gold.monthly)}<span>/mo</span></div>
-        <div class="tier-annual">$${fmt(pricing.gold.annual)} / year</div>
-        <div class="tier-savings">Save ${pricing.gold.discount}% · $${fmt(pricing.gold.savings)} off</div>
-      </div>
-    </div>
-    <!-- Platinum -->
-    <div class="tier-card tier-platinum">
-      <div class="tier-badge">Platinum</div>
-      <div class="tier-body">
-        <div class="tier-monthly">$${fmt(pricing.platinum.monthly)}<span>/mo</span></div>
-        <div class="tier-annual">$${fmt(pricing.platinum.annual)} / year</div>
-        <div class="tier-savings">Save ${pricing.platinum.discount}% · $${fmt(pricing.platinum.savings)} off</div>
+  <!-- Single Plan Card -->
+  <div class="plan-card">
+    <div class="plan-card-header">Clean365 Annual Plan</div>
+    <div class="plan-card-body">
+      <div class="plan-monthly">$${fmt(pricing.monthlyPrice)}<span>/mo</span></div>
+      <div class="plan-annual">Billed annually at $${fmt(pricing.annualPrice)}</div>
+      <div class="plan-stats">
+        <div class="plan-stat">
+          <div class="plan-stat-value">$${fmt(pricing.aLaCarteTotal)}</div>
+          <div class="plan-stat-label">À La Carte Value</div>
+        </div>
+        <div class="plan-stat">
+          <div class="plan-stat-value">$${fmt(pricing.annualPrice)}</div>
+          <div class="plan-stat-label">Annual Total</div>
+        </div>
+        <div class="plan-stat plan-savings">
+          <div class="plan-stat-value">$${fmt(pricing.savings)}</div>
+          <div class="plan-stat-label">You Save (${pricing.discountPercent}%)</div>
+        </div>
       </div>
     </div>
   </div>
@@ -175,9 +163,7 @@ export function generateSellSheetHTML(data: SellSheetData): string {
           <li>Dryer Vent Cleaning</li>
           <li>Interior High Dusting</li>
           <li>Garbage Can Cleaning</li>
-          <li>Weed Removal</li>
           <li>Window Cleaning</li>
-          <li>Outdoor Upholstery</li>
         </ul>
       </div>
       <div class="quarter">
@@ -185,11 +171,10 @@ export function generateSellSheetHTML(data: SellSheetData): string {
         <ul>
           <li>Gutter Cleaning</li>
           <li>House Washing</li>
-          <li>Window Cleaning</li>
-          <li>Garbage Can Cleaning</li>
+          <li>Gutter Brightening</li>
+          <li>Deck/Patio Power Wash</li>
           <li>Weed Removal</li>
-          <li>Interior High Dusting</li>
-          <li>Outdoor Upholstery</li>
+          <li>Garbage Can Cleaning</li>
         </ul>
       </div>
       <div class="quarter">
@@ -197,11 +182,10 @@ export function generateSellSheetHTML(data: SellSheetData): string {
         <ul>
           <li>Gutter Cleaning</li>
           <li>Roof Cleaning</li>
-          <li>Window Cleaning</li>
-          <li>Garbage Can Cleaning</li>
+          <li>Driveway Power Wash</li>
           <li>Weed Removal</li>
-          <li>Interior High Dusting</li>
           <li>Outdoor Upholstery</li>
+          <li>Garbage Can Cleaning</li>
         </ul>
       </div>
       <div class="quarter">
@@ -209,9 +193,8 @@ export function generateSellSheetHTML(data: SellSheetData): string {
         <ul>
           <li>Gutter Cleaning</li>
           <li>Window Cleaning</li>
+          <li>Furniture Shrink Wrap</li>
           <li>Garbage Can Cleaning</li>
-          <li>Weed Removal</li>
-          <li>Interior High Dusting</li>
         </ul>
       </div>
     </div>
