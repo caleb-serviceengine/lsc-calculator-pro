@@ -492,8 +492,14 @@ export const PricingSettingsProvider: React.FC<{ children: React.ReactNode }> = 
         if (error) {
           console.error("Failed to load pricing settings:", error);
         } else if (data?.settings && typeof data.settings === "object" && !Array.isArray(data.settings)) {
-          // Merge loaded settings with defaults so new keys added in future are present
-          setSettings((prev) => ({ ...prev, ...(data.settings as Partial<PricingSettings>) }));
+          const loaded = data.settings as any;
+          // Shallow merge top-level, then deep-merge nested objects so new keys in defaults survive
+          setSettings((prev) => ({
+            ...prev,
+            ...loaded,
+            clean365: { ...prev.clean365, ...(loaded.clean365 ?? {}) },
+            annualServicePlans: { ...prev.annualServicePlans, ...(loaded.annualServicePlans ?? {}) },
+          }));
         }
         // If no row exists yet, we stay on DEFAULT_SETTINGS — first save will create it
       } finally {

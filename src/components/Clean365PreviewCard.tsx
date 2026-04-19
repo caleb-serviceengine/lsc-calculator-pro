@@ -188,12 +188,14 @@ const Clean365PreviewCard = ({
 
       {/* A La Carte Value */}
       {aLaCarteTotal > 0 && (
-        <div className="bg-muted/30 border border-border rounded-xl p-4 mb-6">
+        <div className="bg-white border border-border rounded-xl p-4 mb-6">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-card-foreground">Total A La Carte Value</span>
-            <span className="text-lg font-bold text-card-foreground">${aLaCarteTotal.toFixed(2)}</span>
+            <div>
+              <span className="text-sm font-semibold text-card-foreground">Total À La Carte Value</span>
+              <p className="text-xs text-slate-500 mt-0.5">Sum of all services billed individually</p>
+            </div>
+            <span className="text-xl font-bold text-card-foreground">${aLaCarteTotal.toFixed(2)}</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Based on current calculator inputs + loss leader services</p>
         </div>
       )}
 
@@ -208,26 +210,27 @@ const Clean365PreviewCard = ({
             <div className="text-center">
               <div className="text-4xl font-bold text-primary mb-1">
                 ${monthlyPrice.toFixed(0)}
-                <span className="text-base font-medium text-muted-foreground">/mo</span>
+                <span className="text-base font-medium text-slate-500">/mo</span>
               </div>
-              <div className="text-sm text-muted-foreground mb-4">Billed annually at ${annualPrice.toFixed(2)}</div>
+              <div className="text-sm font-medium text-slate-600 mb-5">Billed annually at ${annualPrice.toFixed(2)}</div>
               <div className="grid grid-cols-3 gap-3 text-sm">
-                <div className="bg-muted/40 rounded-lg p-3">
-                  <div className="font-semibold text-card-foreground">${aLaCarteTotal.toFixed(2)}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">À La Carte Value</div>
+                <div className="bg-slate-100 rounded-lg p-3 text-left">
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">À La Carte</div>
+                  <div className="font-bold text-slate-800 text-base">${aLaCarteTotal.toFixed(2)}</div>
                 </div>
-                <div className="bg-muted/40 rounded-lg p-3">
-                  <div className="font-semibold text-card-foreground">${annualPrice.toFixed(2)}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Annual Total</div>
+                <div className="bg-slate-100 rounded-lg p-3 text-left">
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Annual Total</div>
+                  <div className="font-bold text-slate-800 text-base">${annualPrice.toFixed(2)}</div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <div className="font-semibold text-green-700">${savings.toFixed(2)}</div>
-                  <div className="text-xs text-green-600 mt-0.5">You Save ({c.discountPercent}%)</div>
+                <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-left">
+                  <div className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">You Save</div>
+                  <div className="font-bold text-green-800 text-base">${savings.toFixed(2)}</div>
+                  <div className="text-xs text-green-700 font-medium">{c.discountPercent}% off</div>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               Enter service details above to calculate pricing
             </p>
           )}
@@ -236,21 +239,19 @@ const Clean365PreviewCard = ({
 
       {/* Add to Bundle */}
       {aLaCarteTotal > 0 && annualPrice > 0 && (
-        <div className="flex items-center gap-3 mb-6 p-4 border border-border rounded-xl bg-muted/20">
+        <div className="flex items-center gap-3 mb-6 p-4 border-2 border-primary/30 rounded-xl bg-primary/5">
           <Checkbox
             checked={addToBundle}
             onCheckedChange={(v) => onAddToBundleChange(!!v)}
             id="clean365-bundle"
           />
-          <Label htmlFor="clean365-bundle" className="text-sm font-medium text-card-foreground cursor-pointer flex-1">
+          <Label htmlFor="clean365-bundle" className="text-sm font-semibold text-card-foreground cursor-pointer flex-1">
             Add Clean365 Annual Plan to Bundle
           </Label>
-          <span className="text-sm font-bold text-primary">
-            ${annualPrice.toFixed(2)}/year
-          </span>
-          <span className="text-xs text-muted-foreground">
-            (${monthlyPrice.toFixed(2)}/mo)
-          </span>
+          <div className="text-right">
+            <div className="text-sm font-bold text-primary">${annualPrice.toFixed(2)}/yr</div>
+            <div className="text-xs font-medium text-slate-600">${monthlyPrice.toFixed(2)}/mo</div>
+          </div>
         </div>
       )}
 
@@ -314,15 +315,15 @@ const Clean365PreviewCard = ({
       )}
 
       {/* Value Proposition */}
-      <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-        <h4 className="font-bold text-card-foreground mb-2">Why Choose Clean365?</h4>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li>✓ <strong className="text-card-foreground">Year-round protection</strong> — Your property maintained every season</li>
-          <li>✓ <strong className="text-card-foreground">Priority scheduling</strong> — Lock in your preferred dates</li>
-          <li>✓ <strong className="text-card-foreground">Guaranteed savings</strong> — {c.discountPercent}% off vs. individual services</li>
-          <li>✓ <strong className="text-card-foreground">Weather-optimized</strong> — Services scheduled at ideal times</li>
-          <li>✓ <strong className="text-card-foreground">No November rush</strong> — Avoid the fall gutter cleaning surge</li>
-          <li>✓ <strong className="text-card-foreground">Smooth cash flow</strong> — Quarterly billing or annual prepay</li>
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+        <h4 className="font-bold text-card-foreground mb-3">Why Choose Clean365?</h4>
+        <ul className="space-y-2 text-sm">
+          <li className="flex gap-2"><span className="text-green-600 font-bold shrink-0">✓</span><span><strong className="text-card-foreground">Year-round protection</strong> <span className="text-slate-600">— Your property maintained every season</span></span></li>
+          <li className="flex gap-2"><span className="text-green-600 font-bold shrink-0">✓</span><span><strong className="text-card-foreground">Priority scheduling</strong> <span className="text-slate-600">— Lock in your preferred dates</span></span></li>
+          <li className="flex gap-2"><span className="text-green-600 font-bold shrink-0">✓</span><span><strong className="text-card-foreground">Guaranteed savings</strong> <span className="text-slate-600">— {c.discountPercent}% off vs. individual services</span></span></li>
+          <li className="flex gap-2"><span className="text-green-600 font-bold shrink-0">✓</span><span><strong className="text-card-foreground">Weather-optimized</strong> <span className="text-slate-600">— Services scheduled at ideal times</span></span></li>
+          <li className="flex gap-2"><span className="text-green-600 font-bold shrink-0">✓</span><span><strong className="text-card-foreground">No November rush</strong> <span className="text-slate-600">— Avoid the fall gutter cleaning surge</span></span></li>
+          <li className="flex gap-2"><span className="text-green-600 font-bold shrink-0">✓</span><span><strong className="text-card-foreground">Smooth cash flow</strong> <span className="text-slate-600">— Quarterly billing or annual prepay</span></span></li>
         </ul>
       </div>
     </div>
