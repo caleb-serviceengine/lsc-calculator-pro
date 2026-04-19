@@ -24,16 +24,17 @@ const App = () => {
       (event, session) => {
         if (event === "SIGNED_OUT") {
           setSession(null);
-          setLoading(false);
-        } else if (event === "INITIAL_SESSION") {
-          // INITIAL_SESSION fires after URL hash tokens are processed
-          setSession(session);
-          setLoading(false);
         } else if (session) {
           setSession(session);
         }
+        setLoading(false);
       }
     );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
