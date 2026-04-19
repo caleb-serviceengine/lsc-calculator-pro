@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Widget iframe: allow embedding from any origin
+[[headers]]
+  for = "/widget/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    Content-Security-Policy = "frame-ancestors *"
+
+# SPA fallback for React Router (only fires for paths with no matching file)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

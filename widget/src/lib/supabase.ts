@@ -2,11 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import type { PricingSettings } from "./pricing";
 import type { WidgetPricingTier } from "@/lib/widgetPricingTypes";
 
-// These are public/anon credentials — safe to expose in the browser bundle.
-// The pricing_settings table has an RLS policy that allows anonymous reads.
-const SUPABASE_URL = "https://kagakiecujurplqfkrft.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthZ2FraWVjdWp1cnBscWZrcmZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTI1MzEsImV4cCI6MjA4ODU4ODUzMX0._I5gHHZ_5GQVEzywY9grb947hukrsoyCRp2ltiaV-2w";
+// Anon credentials — safe to expose in the browser bundle.
+// Built by npm run build in Netlify's env where these vars are set.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: false },
