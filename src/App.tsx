@@ -20,30 +20,22 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_OUT") {
           setSession(null);
+          setLoading(false);
+        } else if (event === "INITIAL_SESSION") {
+          // INITIAL_SESSION fires after URL hash tokens are processed
+          setSession(session);
+          setLoading(false);
         } else if (session) {
           setSession(session);
         }
-        setLoading(false);
       }
     );
 
-    // Only use getSession as fallback if onAuthStateChange hasn't fired yet
-    const timer = setTimeout(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(prev => prev ?? session);
-        setLoading(false);
-      });
-    }, 500);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timer);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) {
