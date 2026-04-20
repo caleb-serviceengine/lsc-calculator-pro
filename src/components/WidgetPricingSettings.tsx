@@ -111,10 +111,19 @@ export default function WidgetPricingSettings() {
         if (error) throw error;
       }
 
-      if (toUpsert.length > 0) {
+      const toInsert = toUpsert.filter((t) => !t.id).map(({ id, ...rest }) => rest);
+      const toUpdate = toUpsert.filter((t) => !!t.id);
+
+      if (toInsert.length > 0) {
+        const { error } = await supabase.from("widget_pricing_tiers").insert(toInsert);
+        if (error) throw error;
+      }
+
+      for (const { id, ...fields } of toUpdate) {
         const { error } = await supabase
           .from("widget_pricing_tiers")
-          .upsert(toUpsert, { onConflict: "service_id,min_sqft,max_sqft" });
+          .update(fields)
+          .eq("id", id as number);
         if (error) throw error;
       }
 
@@ -127,9 +136,11 @@ export default function WidgetPricingSettings() {
       setTiers((data || []).map((t) => ({ ...t, _key: nextKey() })));
       setSaved(true);
     } catch (err: unknown) {
-      setSaveError(
-        "Save failed: " + (err instanceof Error ? err.message : String(err))
-      );
+      const msg = err instanceof Error ? err.message
+        : (err !== null && typeof err === "object" && "message" in err)
+          ? String((err as { message: unknown }).message)
+          : String(err);
+      setSaveError("Save failed: " + msg);
     } finally {
       setSaving(false);
     }
