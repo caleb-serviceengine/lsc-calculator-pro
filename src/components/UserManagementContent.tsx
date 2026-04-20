@@ -22,11 +22,12 @@ import { Loader2 } from "lucide-react";
 
 interface UserProfile {
   id: string;
+  user_id: string;
   full_name: string | null;
   role: string;
   is_active: boolean;
   created_at: string;
-  email?: string;
+  email: string | null;
 }
 
 const UserManagementContent = () => {
@@ -42,7 +43,7 @@ const UserManagementContent = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, role, is_active, created_at, email")
+        .select("id, user_id, full_name, role, is_active, created_at, email")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
